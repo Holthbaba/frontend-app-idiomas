@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { iniciarLicao, checarResposta } from '../services/api';
 
 function LessonPage() {
-  // O desafio agora armazena o objeto completo retornado pela API: { id, palavra_id, frase_texto }
+  // O desafio agora armazena o objeto completo, incluindo o status
   const [desafio, setDesafio] = useState(null);
   const [resposta, setResposta] = useState('');
   const [feedback, setFeedback] = useState({ tipo: '', texto: '' });
@@ -19,9 +19,8 @@ function LessonPage() {
     setDesafio(null);
     try {
       const response = await iniciarLicao();
-      setDesafio(response.data);
+      setDesafio(response.data); // Armazena o desafio completo { id, palavra_id, frase_texto, status }
     } catch (error) {
-      // Se a API retornar 404 (Nenhuma frase nova), exibe a mensagem e oferece voltar ao Dashboard
       const errorMsg = error.response?.data?.message || 'Erro ao carregar a lição.';
       setFeedback({ tipo: 'info', texto: errorMsg });
     } finally {
@@ -39,7 +38,6 @@ function LessonPage() {
 
     setIsChecking(true);
     try {
-      // Passamos os novos IDs (id da frase e palavra_id) para a API
       const res = await checarResposta(
         desafio.id,
         desafio.palavra_id,
@@ -51,12 +49,10 @@ function LessonPage() {
 
       if (acertou) {
         setFeedback({ tipo: 'sucesso', texto: message });
-        // Se acertou, carrega o próximo desafio após um breve intervalo
         setTimeout(() => {
           carregarProximoDesafio();
         }, 2500);
       } else {
-        // Se errou, mostra o feedback, mas NÃO carrega um novo desafio. Permite que o usuário tente novamente.
         setFeedback({ tipo: 'erro', texto: message });
       }
 
@@ -69,7 +65,6 @@ function LessonPage() {
 
   if (loading) return <p>Preparando seu desafio...</p>;
 
-  // Se não há desafio e há uma mensagem de feedback (ex: "Nenhuma frase nova"), exibe a mensagem.
   if (!desafio && feedback.texto) {
      return (
         <div style={{textAlign: 'center'}}>
@@ -80,10 +75,21 @@ function LessonPage() {
         </div>
      )
   }
+  
+  // Renderização condicional do aviso de revisão
+  const modoRevisao = desafio && desafio.status === 'aprendida';
 
   return (
     <div>
       <h2>Lição do Dia</h2>
+
+      {/* AVISO DE REVISÃO */}
+      {modoRevisao && (
+        <div style={{ padding: '10px', background: '#ffc107', color: '#333', borderRadius: '5px', textAlign: 'center', marginBottom: '1rem' }}>
+          <strong>Modo Revisão:</strong> Você já aprendeu esta palavra antes. Bom trabalho!
+        </div>
+      )}
+
       <div style={{ background: '#e7f3fe', padding: '20px', borderRadius: '8px', margin: '2rem 0' }}>
         <p>Traduza a seguinte frase para o português:</p>
         <h3 style={{marginTop: '1rem', fontStyle: 'italic'}}>"{desafio.frase_texto}"</h3>
@@ -95,7 +101,7 @@ function LessonPage() {
           onChange={(e) => setResposta(e.target.value)}
           placeholder="Digite sua tradução aqui..."
           rows="4"
-          disabled={isChecking || feedback.tipo === 'sucesso'} // Desabilita após acertar
+          disabled={isChecking || feedback.tipo === 'sucesso'}
         />
         <button type="submit" disabled={isChecking || feedback.tipo === 'sucesso'}>
           {isChecking ? 'Corrigindo...' : 'Corrigir Resposta'}

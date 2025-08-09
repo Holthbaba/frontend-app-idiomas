@@ -6,6 +6,7 @@ function AddWordPage() {
   const [palavra, setPalavra] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [tipoMensagem, setTipoMensagem] = useState(''); // 'sucesso' ou 'erro'
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,6 +52,9 @@ function AddWordPage() {
       )}
     </div>
   );
+
+
+
 }
 
 export default AddWordPage;
