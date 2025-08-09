@@ -17,13 +17,15 @@ export const iniciarLicao = () => {
   return apiClient.get('/lesson/start');
 };
 
-// --- FUNÇÃO ATUALIZADA ---
-// Agora recebe fraseId e palavraId para enviar ao backend.
 export const checarResposta = (fraseId, palavraId, fraseOriginal, respostaUsuario) => {
   return apiClient.post('/lesson/check', { fraseId, palavraId, fraseOriginal, respostaUsuario });
 };
 
 export const deletarPalavra = (id) => {
-  // A URL será algo como /api/words/15
   return apiClient.delete(`/${id}`);
+};
+
+// NOVA FUNÇÃO
+export const getPalavraDetalhes = (id) => {
+  return apiClient.get(`/${id}/details`);
 };

@@ -1,7 +1,7 @@
 // src/pages/DashboardPage.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTodasPalavras, deletarPalavra } from '../services/api'; // 1. Importe a função de deletar
+import { getTodasPalavras, deletarPalavra } from '../services/api';
 
 function DashboardPage() {
   const [palavras, setPalavras] = useState([]);
@@ -24,13 +24,10 @@ function DashboardPage() {
     carregarPalavras();
   }, []);
 
-  // 2. Crie a função para lidar com a exclusão
   const handleDelete = async (palavraId, palavraTexto) => {
-    // Adiciona uma confirmação para evitar exclusões acidentais (BOA PRÁTICA)
     if (window.confirm(`Tem certeza de que deseja excluir a palavra "${palavraTexto}"? Isso não pode ser desfeito.`)) {
       try {
         await deletarPalavra(palavraId);
-        // Atualiza o estado local para remover a palavra da lista sem recarregar a página
         setPalavras(palavras.filter(p => p.id !== palavraId));
         alert(`Palavra "${palavraTexto}" excluída com sucesso!`);
       } catch (error) {
@@ -60,7 +57,7 @@ function DashboardPage() {
             <tr style={{ background: '#f2f2f2' }}>
               <th style={{ border: '1px solid #ddd', padding: '12px' }}>Palavra</th>
               <th style={{ border: '1px solid #ddd', padding: '12px' }}>Status</th>
-              <th style={{ border: '1px solid #ddd', padding: '12px' }}>Ações</th> {/* 3. Nova coluna */}
+              <th style={{ border: '1px solid #ddd', padding: '12px' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -68,8 +65,14 @@ function DashboardPage() {
               <tr key={p.id}>
                 <td style={{ border: '1px solid #ddd', padding: '10px' }}>{p.palavra}</td>
                 <td style={{ border: '1px solid #ddd', padding: '10px' }}>{p.status}</td>
-                <td style={{ border: '1px solid #ddd', padding: '10px', textAlign: 'center' }}> {/* 4. Nova célula com o botão */}
-                  <button 
+                <td style={{ border: '1px solid #ddd', padding: '10px', textAlign: 'center' }}>
+                  <button
+                    onClick={() => navigate(`/word/${p.id}/details`)}
+                    style={{backgroundColor: '#007bff', fontSize: '0.8rem', padding: '5px 10px', marginRight: '5px'}}
+                  >
+                    Detalhes
+                  </button>
+                  <button
                     onClick={() => handleDelete(p.id, p.palavra)}
                     style={{backgroundColor: '#dc3545', fontSize: '0.8rem', padding: '5px 10px'}}
                   >
