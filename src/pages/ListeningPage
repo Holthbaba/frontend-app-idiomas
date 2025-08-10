@@ -1,0 +1,129 @@
+// src/pages/ListeningPage.js
+import React, { useState } from 'react';
+import { iniciarLicaoListening, checarRespostasListening } from '../services/api';
+
+function ListeningPage() {
+  const [licao, setLicao] = useState(null);
+  const [respostas, setRespostas] = useState(['', '', '']);
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [mostrarTexto, setMostrarTexto] = useState(false);
+
+  const handleGerarLicao = async () => {
+    setLoading(true);
+    setLicao(null);
+    setFeedback(null);
+    setRespostas(['', '', '']);
+    setMostrarTexto(false);
+    try {
+      const response = await iniciarLicaoListening();
+      setLicao(response.data);
+    } catch (error) {
+      console.error("Erro ao gerar lição de listening:", error);
+      setFeedback({ tipo: 'erro', texto: 'Não foi possível carregar a lição. Tente novamente.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOuvir = () => {
+    if (licao && licao.texto) {
+      const utterance = new SpeechSynthesisUtterance(licao.texto);
+      utterance.lang = 'en-US';
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleRespostasChange = (index, value) => {
+    const novasRespostas = [...respostas];
+    novasRespostas[index] = value;
+    setRespostas(novasRespostas);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (respostas.some(r => !r.trim())) {
+      setFeedback({ tipo: 'erro', texto: 'Por favor, responda todas as perguntas.' });
+      return;
+    }
+    setChecking(true);
+    setFeedback(null);
+    try {
+      const response = await checarRespostasListening({
+        texto: licao.texto,
+        perguntas: licao.perguntas,
+        respostas: respostas
+      });
+      setFeedback({ tipo: 'info', texto: response.data.feedback });
+    } catch (error) {
+      console.error("Erro ao checar respostas:", error);
+      setFeedback({ tipo: 'erro', texto: 'Erro ao processar suas respostas.' });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2>Lição de Listening</h2>
+      <button onClick={handleGerarLicao} disabled={loading} style={{ marginBottom: '1rem' }}>
+        {loading ? 'Gerando...' : 'Gerar Nova Lição de Listening'}
+      </button>
+
+      {licao && (
+        <div>
+          <button onClick={handleOuvir} style={{ marginBottom: '1rem', marginLeft: '1rem' }}>
+            Ouvir o Texto
+          </button>
+
+          <div style={{ margin: '2rem 0' }}>
+            <button onClick={() => setMostrarTexto(!mostrarTexto)} style={{ marginBottom: '1rem' }}>
+              {mostrarTexto ? 'Ocultar Texto' : 'Mostrar Texto'}
+            </button>
+            {mostrarTexto && (
+              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', background: '#f9f9f9', padding: '1rem', borderRadius: '5px' }}>
+                {licao.texto}
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {licao.perguntas.map((pergunta, index) => (
+              <div key={index} style={{ marginBottom: '1rem' }}>
+                <label>{pergunta}</label>
+                <input
+                  type="text"
+                  value={respostas[index]}
+                  onChange={(e) => handleRespostasChange(index, e.target.value)}
+                  placeholder={`Sua resposta para a pergunta ${index + 1}`}
+                  disabled={checking}
+                />
+              </div>
+            ))}
+            <button type="submit" disabled={checking}>
+              {checking ? 'Corrigindo...' : 'Corrigir Respostas'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {feedback && (
+        <div style={{
+          marginTop: '20px',
+          padding: '15px',
+          color: 'white',
+          borderRadius: '5px',
+          background: feedback.tipo === 'erro' ? '#dc3545' : '#17a2b8'
+        }}>
+          <strong>Feedback:</strong>
+          <div style={{ whiteSpace: 'pre-wrap', marginTop: '10px' }}>
+            {feedback.texto}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ListeningPage;

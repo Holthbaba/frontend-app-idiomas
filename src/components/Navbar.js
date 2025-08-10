@@ -21,6 +21,11 @@ function Navbar() {
               Adicionar Palavra
             </NavLink>
           </li>
+          <li className="nav-item">
+            <NavLink to="/listening" className="nav-links">
+              Listening
+            </NavLink>
+          </li>
         </ul>
       </div>
     </nav>
